@@ -500,7 +500,7 @@ td:last-child { border-right:none; }
 <div class="header">
   <div class="header-logo">
     <div class="header-left">
-      <h1>Monitoring Status Review</h1>
+      <h1>Status Monitoring Dokumen</h1>
       <p id="srcLabel">Monitoring Review &amp; Approval Dokumen — Real-time</p>
     </div>
   </div>
@@ -612,7 +612,9 @@ td:last-child { border-right:none; }
 // ═══════════════════════════
 //  CONFIG
 // ═══════════════════════════
-let SCRIPT_URL = localStorage.getItem('docmon_url') || '';
+// ── Ganti URL di bawah ini dengan URL Apps Script Anda ──
+const HARDCODED_URL = 'https://script.google.com/a/macros/wingscorp.com/s/AKfycbzoDofVD8KQJ67BcqLHUKFEnvK3AtbqSK60oQYMQ2rKcYp-hbzmxZwzm8HpX4t0wA9mYQ/exec'; // ← PASTE URL APPS SCRIPT DI SINI
+let SCRIPT_URL = HARDCODED_URL || localStorage.getItem('docmon_url') || '';
 const REFRESH_SEC = 300;
 
 const ALL_COLS = [
