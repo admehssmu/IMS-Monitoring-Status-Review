@@ -714,15 +714,24 @@ function useDemoMode(){
 // ═══════════════════════════
 //  JSONP (bypass CORS)
 // ═══════════════════════════
-function fetchJSONP(url,action){
-  return new Promise((resolve,reject)=>{
-    const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*9999);
-    const script=document.createElement('script');
-    const timer=setTimeout(()=>{ cleanup(); reject(new Error('Timeout 15 detik')); },15000);
-    window[cb]=(data)=>{ cleanup(); resolve(data); };
-    function cleanup(){ clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
-    script.onerror=()=>{ cleanup(); reject(new Error('Script gagal dimuat')); };
-    const qs='action='+action+'&callback='+cb; script.src=url+'?'+qs;
+// Implementasi JSONP identik dengan Dashboard Buletin wingscorp.com
+function fetchJSONP(url, action){
+  return new Promise((resolve) => {
+    const cbName = "_cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const timer = setTimeout(() => { cleanup(); resolve({ error: "Timeout." }); }, 15000);
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      const el = document.getElementById("jsonp_" + cbName);
+      if (el) el.remove();
+    }
+    window[cbName] = function(data) { cleanup(); resolve(data); };
+    const params = { action: action };
+    const qs = Object.entries(params).map(([k,v]) => k + "=" + encodeURIComponent(v)).join("&");
+    const script = document.createElement("script");
+    script.id    = "jsonp_" + cbName;
+    script.src   = url + "?" + qs + "&callback=" + cbName;
+    script.onerror = () => { cleanup(); resolve({ error: "Script gagal dimuat." }); };
     document.head.appendChild(script);
   });
 }
@@ -740,19 +749,13 @@ async function fetchData(manual=false){
   const db=document.getElementById('debugBox'); db.classList.add('show'); clearDebug();
   addDebugStep('dot-spin','Menghubungi Apps Script...');
   try {
-    let json;
-    try {
-      addDebugStep('dot-spin','Mencoba koneksi JSONP...');
-      json=await fetchJSONP(SCRIPT_URL,'getData');
-      addDebugStep('dot-ok','Koneksi JSONP berhasil ✓');
-    } catch(e){
-      addDebugStep('dot-err','JSONP gagal: '+e.message);
-      addDebugStep('dot-spin','Mencoba fetch langsung...');
-      const res=await fetch(SCRIPT_URL+'?action=getData&t='+Date.now());
-      json=await res.json();
-      addDebugStep('dot-ok','Fetch langsung berhasil ✓');
-    }
-    if(!json.success) throw new Error(json.error||'Respons tidak valid');
+    addDebugStep('dot-spin','Mencoba koneksi JSONP...');
+    const json = await fetchJSONP(SCRIPT_URL,'getData');
+
+    if(json.error){ throw new Error(json.error); }
+    if(!json.success){ throw new Error('Respons tidak valid dari Apps Script'); }
+
+    addDebugStep('dot-ok','Koneksi berhasil ✓');
     addDebugStep('dot-ok','Data diterima: '+json.total+' dokumen ✓');
     allDocs=json.data;
     setConn('ok','✅ Terhubung ke Google Sheets · '+json.total+' dokumen dimuat');
@@ -766,7 +769,7 @@ async function fetchData(manual=false){
     addDebugStep('dot-err','Error: '+err.message);
     addDebugStep('dot-wait','→ Cek: SHEET_NAME sudah benar di Apps Script?');
     addDebugStep('dot-wait','→ Cek: Sudah deploy ulang setelah update kode?');
-    addDebugStep('dot-wait','→ Cek: Who has access = Anyone?');
+    addDebugStep('dot-wait','→ Cek: Who has access = Anyone within wingscorp.com?');
     setConn('err','❌ Gagal terhubung — lihat kotak diagnosis di atas');
     showCenter('❌','Gagal memuat data',err.message);
     if(manual) showToast('❌ '+err.message);
