@@ -612,9 +612,9 @@ td:last-child { border-right:none; }
 // ═══════════════════════════
 //  CONFIG
 // ═══════════════════════════
-// ── Ganti URL di bawah ini dengan URL Apps Script Anda ──
-const HARDCODED_URL = 'https://script.google.com/a/macros/wingscorp.com/s/AKfycbzoDofVD8KQJ67BcqLHUKFEnvK3AtbqSK60oQYMQ2rKcYp-hbzmxZwzm8HpX4t0wA9mYQ/exec'; // ← PASTE URL APPS SCRIPT DI SINI
-let SCRIPT_URL = HARDCODED_URL || localStorage.getItem('docmon_url') || '';
+// URL Apps Script — hardcode langsung seperti Dashboard Buletin
+const APPS_SCRIPT_URL = "https://script.google.com/a/macros/wingscorp.com/s/AKfycbzoDofVD8KQJ67BcqLHUKFEnvK3AtbqSK60oQYMQ2rKcYp-hbzmxZwzm8HpX4t0wA9mYQ/exec";
+let SCRIPT_URL = APPS_SCRIPT_URL;
 const REFRESH_SEC = 300;
 
 const ALL_COLS = [
@@ -722,7 +722,7 @@ function fetchJSONP(url,action){
     window[cb]=(data)=>{ cleanup(); resolve(data); };
     function cleanup(){ clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
     script.onerror=()=>{ cleanup(); reject(new Error('Script gagal dimuat')); };
-    script.src=url+'?action='+action+'&callback='+cb+'&t='+Date.now();
+    const qs='action='+action+'&callback='+cb; script.src=url+'?'+qs;
     document.head.appendChild(script);
   });
 }
@@ -935,14 +935,10 @@ function changePage(dir){
 //  INIT
 // ═══════════════════════════
 window.onload=()=>{
-  if(SCRIPT_URL){
-    document.getElementById('setupModal').classList.add('hidden');
-    fetchData();
-  } else {
-    document.getElementById('debugBox').classList.remove('show');
-    showCenter('⚙️','Belum terhubung ke Google Sheets','Klik ⚙️ untuk memasukkan URL Apps Script.');
-    setConn('err','⚙️ Belum terhubung — klik ⚙️ untuk setup koneksi.');
-  }
+  // URL sudah hardcode — langsung fetch seperti Dashboard Buletin
+  document.getElementById('setupModal').classList.add('hidden');
+  document.getElementById('debugBox').classList.remove('show');
+  fetchData();
 };
 </script>
 </body>
